@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro-Netflix CTR Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h1>Micro-Netflix</h1>
+        <div class="user-profile-controls">
+            <h2>User Profile (Simulated)</h2>
+            <label for="userAge">Age:</label>
+            <input type="number" id="userAge" value="30" min="18" max="99">
+            <label for="userGender">Gender:</label>
+            <select id="userGender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+            <label for="userSubscription">Subscription:</label>
+            <select id="userSubscription">
+                <option value="Premium">Premium</option>
+                <option value="Standard">Standard</option>
+                <option value="Ad-Supported" selected>Ad-Supported</option>
+            </select>
+            <label for="userGenrePref">Genre Pref:</label>
+            <select id="userGenrePref">
+                <option value="Action">Action</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+                <option value="SciFi" selected>SciFi</option>
+                <option value="Mystery">Mystery</option>
+                <option value="Kids">Kids</option>
+            </select>
+            <p>Adjust these to see how ad predictions change!</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <h2>Content to Watch</h2>
+        {% for movie in movies %}
+        <div class="movie-card" data-movie-id="{{ movie.id }}" data-genre="{{ movie.genre }}">
+            <img src="{{ movie.thumbnail }}" alt="{{ movie.title }}">
+            <h3>{{ movie.title }}</h3>
+            <p>Genre: {{ movie.genre }}</p>
+            <button onclick="playMovie('{{ movie.id }}', '{{ movie.title }}', '{{ movie.genre }}')">Play</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="videoPlayerContainer" class="hidden">
+        <h2>Now Playing: <span id="playingMovieTitle"></span></h2>
+        <div class="video-wrapper">
+            <video id="movieVideo" width="100%" height="auto" controls>
+                <source src="https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div id="adOverlay" class="ad-overlay hidden">
+                <h3>AD BREAK!</h3>
+                <img id="adImage" src="" alt="Advertisement">
+                <p>Predicted CTR: <span id="predictedCtr"></span></p>
+                <p class="ad-title">Ad: <span id="adTitle"></span></p>
+                <div class="ad-actions">
+                    <button id="clickAdBtn">Click Ad (Simulated)</button>
+                    <button id="skipAdBtn">Skip Ad (Simulated)</button>
+                </div>
+                <small>This ad was selected for you based on your simulated profile and content.</small>
+            </div>
+        </div>
+        <button onclick="closeVideoPlayer()">Close Video</button>
+    </div>
+
+    <div class="llm-chat-container">
+        <h2>Ad Campaign LLM Analyst (Conversational Insights)</h2>
+        <div id="chatHistory" class="chat-history">
+            <div class="chat-message bot">Hello! Ask me about ad campaign performance. Try "How is the Summer Blockbusters campaign doing?"</div>
+        </div>
+        <input type="text" id="llmInput" placeholder="Ask about ad campaigns..." onkeypress="handleLLMInput(event)">
+        <button onclick="askLLM()">Send</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
