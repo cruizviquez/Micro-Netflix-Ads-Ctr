@@ -3,7 +3,7 @@ const videoPlayerContainer = document.getElementById('videoPlayerContainer');
 const playingMovieTitle = document.getElementById('playingMovieTitle');
 const movieVideo = document.getElementById('movieVideo');
 const adOverlay = document.getElementById('adOverlay');
-const adImage = document.getElementById('adImage');
+const adImage = document.getElementById('adImage');getUserProfile()
 const adTitle = document.getElementById('adTitle');
 const predictedCtr = document.getElementById('predictedCtr');
 const clickAdBtn = document.getElementById('clickAdBtn');
@@ -18,7 +18,7 @@ function getUserProfile() {
         gender: document.getElementById('userGender').value,
         subscription_tier: document.getElementById('userSubscription').value,
         genre_preference: document.getElementById('userGenrePref').value,
-        // Add more user features here as needed
+        watch_hours: parseInt(document.getElementById('userAge').value) * 0.8 // Simple mock for watch hours
     };
 }
 
