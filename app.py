@@ -76,7 +76,6 @@ MOCK_AD_CAMPAIGN_ANALYTICS = {
     }
 }
 
-
 # --- AI Model Training (Done at app startup for demo purposes) ---
 ml_pipeline = None # Global variable to hold our trained model
 
@@ -157,18 +156,15 @@ def train_mock_ctr_model():
     print("Mock CTR model trained successfully.")
     return pipeline, X.columns
 
-# --- Flask Routes ---
-@app.before_first_request
-def initialize_model():
-    """Initializes the ML model when the Flask app first starts."""
-    global ml_pipeline
-    try:
-        ml_pipeline, _ = train_mock_ctr_model()
-        print("ML pipeline loaded/trained.")
-    except Exception as e:
-        print(f"ERROR: Failed to initialize ML pipeline: {e}")
-        ml_pipeline = None
+# Initialize the ML pipeline immediately when the script runs
+try:
+    ml_pipeline, _ = train_mock_ctr_model()
+    print("ML pipeline loaded/trained successfully at startup.")
+except Exception as e:
+    print(f"ERROR: Failed to initialize ML pipeline at startup: {e}")
+    ml_pipeline = None # Indicate failure
 
+# --- Flask Routes ---
 @app.route('/')
 def index():
     return render_template('index.html', movies=MOVIES)
@@ -234,7 +230,7 @@ def ad_event():
 @app.route('/ask_llm', methods=['POST'])
 def ask_llm():
     if openai_client is None:
-        return jsonify({"answer": "LLM functionality is disabled because OPENAI_API_KEY is not set."}), 503
+        return jsonify({"answer": "LLM functionality is disabled because OPENAI_API_KEY is not set. Please check Codespaces secrets."}), 503
 
     question = request.json.get('question', '').strip()
     if not question:
@@ -266,11 +262,11 @@ def ask_llm():
         print(f"OpenAI API connection error: {e}")
         return jsonify({"answer": "Could not connect to OpenAI API. Please check your internet connection or API status."}), 500
     except openai.RateLimitError as e:
-        print(f"OpenAI API rate limit exceeded: {e}")
-        return jsonify({"answer": "OpenAI API rate limit exceeded. Please try again shortly."}), 500
+        print(f"OpenAI API rate limit exceeded. Please try again shortly. {e}"), 500
+        return jsonify({"answer": f"OpenAI API rate limit exceeded. Please try again shortly."}), 429 # 429 Too Many Requests
     except openai.APIStatusError as e:
         print(f"OpenAI API status error: {e}")
-        return jsonify({"answer": f"OpenAI API error: {e.status_code} - {e.response}"}), 500
+        return jsonify({"answer": f"OpenAI API error: {e.status_code} - {e.response.json().get('message', 'Unknown error')}"}), 500
     except Exception as e:
         print(f"An unexpected error occurred with OpenAI API: {e}")
         return jsonify({"answer": f"An unexpected error occurred: {str(e)}"}), 500
