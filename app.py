@@ -11,9 +11,21 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression # Our simple AI model
+from sklearn.linear_model import LogisticRegression
+
+# --- OpenAI for our "real" LLM ---
+import openai
 
 app = Flask(__name__)
+
+# --- Configuration for OpenAI ---
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") # Read from environment variable for security
+if not OPENAI_API_KEY:
+    print("WARNING: OPENAI_API_KEY environment variable not set. LLM functionality will be disabled.")
+    print("Please set it in your Codespaces secrets or environment variables.")
+    openai_client = None
+else:
+    openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # --- Simulated Data ---
 MOVIES = [
@@ -32,7 +44,8 @@ ADS_INVENTORY = [
     {"id": "ad5", "title": "Tropical Escapes", "category": "Travel", "creative_freshness": 0.5, "image": "https://via.placeholder.com/640x360?text=Travel+Ad"},
 ]
 
-# --- Mock Ad Campaign Analytics (for LLM component concept) ---
+# --- Mock Ad Campaign Analytics (for LLM context) ---
+# This data will be fed to the LLM as context
 MOCK_AD_CAMPAIGN_ANALYTICS = {
     "Summer Blockbusters": {
         "impressions_this_week": 1500000,
@@ -51,8 +64,18 @@ MOCK_AD_CAMPAIGN_ANALYTICS = {
         "status": "Exceeding Expectations",
         "top_performing_ad": "FuturePhone Pro",
         "underperforming_segment": "Late night viewers"
+    },
+    "Travel Adventures": {
+        "impressions_this_week": 600000,
+        "clicks_this_week": 15000,
+        "ctr_this_week": 0.025,
+        "budget_spent": 80000,
+        "status": "Meeting Targets",
+        "top_performing_ad": "Tropical Escapes",
+        "underperforming_segment": "Youth demographics"
     }
 }
+
 
 # --- AI Model Training (Done at app startup for demo purposes) ---
 ml_pipeline = None # Global variable to hold our trained model
@@ -82,7 +105,6 @@ def train_mock_ctr_model():
     ad_placement_time_slot = np.random.choice(all_ad_placement_time_slots, num_samples)
 
     # Generate labels (clicks) based on some underlying "true" logic for the model to learn
-    # This simulates real-world patterns that a model would detect
     ctr_base_prob = 0.02
     ctr_probs = ctr_base_prob + \
                 (user_age / 1000) + \
@@ -90,7 +112,7 @@ def train_mock_ctr_model():
                 (ad_creative_freshness * 0.03) + \
                 (np.where(user_genre_preference == 'SciFi', 0.02, 0)) + \
                 (np.where(user_subscription_tier == 'Ad-Supported', 0.01, 0)) + \
-                (np.where(user_gender == 'Female', 0.005, 0)) # Slight gender bias for demo
+                (np.where((user_gender == 'Male') & (user_genre_preference == 'Action'), 0.03, 0)) # Stronger Male/Action bias
 
     ctr_probs = np.clip(ctr_probs, 0.001, 0.1)
     clicks = (np.random.rand(num_samples) < ctr_probs).astype(int)
@@ -111,13 +133,10 @@ def train_mock_ctr_model():
     X = train_data.drop('click', axis=1)
     y = train_data['click']
 
-    # Define preprocessing steps
     numerical_features = ['user_age', 'user_watch_hours_monthly', 'ad_creative_freshness']
     categorical_features = ['user_gender', 'user_subscription_tier', 'user_genre_preference',
                             'ad_category', 'ad_placement_time_slot']
 
-    # Use 'categories' parameter in OneHotEncoder to ensure consistent columns during inference
-    # even if a category is missing in a single prediction request.
     preprocessor = ColumnTransformer(
         transformers=[
             ('num', StandardScaler(), numerical_features),
@@ -126,20 +145,17 @@ def train_mock_ctr_model():
                                               all_ad_categories, all_ad_placement_time_slots]),
              categorical_features)
         ],
-        remainder='passthrough' # Keep other columns if any, though none expected here
+        remainder='passthrough'
     )
 
-    # Create a pipeline: preprocess data then apply Logistic Regression model
     pipeline = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('classifier', LogisticRegression(solver='liblinear', random_state=42, C=0.5)) # C is regularization strength
+        ('classifier', LogisticRegression(solver='liblinear', random_state=42, C=0.5))
     ])
 
-    # Train the pipeline
     pipeline.fit(X, y)
     print("Mock CTR model trained successfully.")
-    return pipeline, X.columns # Return pipeline and expected feature columns
-
+    return pipeline, X.columns
 
 # --- Flask Routes ---
 @app.before_first_request
@@ -151,7 +167,7 @@ def initialize_model():
         print("ML pipeline loaded/trained.")
     except Exception as e:
         print(f"ERROR: Failed to initialize ML pipeline: {e}")
-        ml_pipeline = None # Indicate failure
+        ml_pipeline = None
 
 @app.route('/')
 def index():
@@ -175,45 +191,35 @@ def simulate_ad_request():
     if not user_profile or not content_context:
         return jsonify({"error": "Missing user_profile or content_context"}), 400
 
-    # Prepare data for prediction
     best_ad = None
     max_ctr = -1.0
 
     for ad in ADS_INVENTORY:
-        # Construct input DataFrame for the pipeline for each ad candidate
-        # IMPORTANT: Feature names and order must match training data!
-        # This is where we combine user, content (movie genre), and ad features.
         input_data = pd.DataFrame([{
             'user_age': user_profile['age'],
             'user_gender': user_profile['gender'],
             'user_subscription_tier': user_profile['subscription_tier'],
-            'user_watch_hours_monthly': user_profile['watch_hours'], # Adjusted from frontend
+            'user_watch_hours_monthly': user_profile['watch_hours'],
             'user_genre_preference': user_profile['genre_preference'],
             'ad_category': ad['category'],
             'ad_creative_freshness': ad['creative_freshness'],
             'ad_placement_time_slot': 'Evening' # Fixed for simplicity in demo
         }])
 
-        # Add an influence from the content context (movie genre)
-        # This is a manual feature for the demo; a real model would learn this.
-        # Here we'll modify `ad_creative_freshness` based on match, for simplicity.
         if selected_movie_genre == 'SciFi' and ad['category'] == 'Tech':
-            input_data.loc[:, 'ad_creative_freshness'] = min(1.0, input_data['ad_creative_freshness'] * 1.2) # Boost freshness
+            input_data.loc[:, 'ad_creative_freshness'] = min(1.0, input_data['ad_creative_freshness'] * 1.2)
         elif selected_movie_genre == 'Comedy' and ad['category'] == 'Food':
              input_data.loc[:, 'ad_creative_freshness'] = min(1.0, input_data['ad_creative_freshness'] * 1.1)
 
-
-        # Make prediction using the trained ML pipeline
-        # predict_proba returns [prob_no_click, prob_click]
-        predicted_proba = ml_pipeline.predict_proba(input_data)[0][1] # Probability of clicking
+        predicted_proba = ml_pipeline.predict_proba(input_data)[0][1]
 
         if predicted_proba > max_ctr:
             max_ctr = predicted_proba
-            best_ad = ad.copy() # Make a copy to avoid modifying original inventory
+            best_ad = ad.copy()
             best_ad['predicted_ctr'] = f"{predicted_proba*100:.2f}%"
 
     if best_ad:
-        time.sleep(0.5) # Simulate a slight delay for "real-time" prediction
+        time.sleep(0.5)
         return jsonify(best_ad)
     else:
         return jsonify({"error": "No suitable ad found"}), 404
@@ -222,41 +228,52 @@ def simulate_ad_request():
 def ad_event():
     event_data = request.json
     print(f"AD EVENT LOGGED: {event_data}")
-    # In a real system, this would push to Kafka/data warehouse for model retraining
     return jsonify({"status": "logged", "event": event_data}), 200
 
-# --- Mock LLM Endpoint ---
+# --- REAL LLM Endpoint ---
 @app.route('/ask_llm', methods=['POST'])
 def ask_llm():
-    question = request.json.get('question', '').lower()
-    response = {"answer": "I'm a mock LLM and can only answer very specific questions about ad campaigns."}
+    if openai_client is None:
+        return jsonify({"answer": "LLM functionality is disabled because OPENAI_API_KEY is not set."}), 503
 
-    if "how is the ad campaign" in question or "campaign doing" in question:
-        campaign_name_match = None
-        for name in MOCK_AD_CAMPAIGN_ANALYTICS.keys():
-            if name.lower() in question:
-                campaign_name_match = name
-                break
+    question = request.json.get('question', '').strip()
+    if not question:
+        return jsonify({"answer": "Please ask a question."}), 400
 
-        if campaign_name_match:
-            campaign_data = MOCK_AD_CAMPAIGN_ANALYTICS[campaign_name_match]
-            answer_text = (
-                f"The '{campaign_name_match}' campaign is currently '{campaign_data['status']}'. "
-                f"This week, it has {campaign_data['impressions_this_week']:,} impressions and "
-                f"{campaign_data['clicks_this_week']:,} clicks, resulting in a CTR of {campaign_data['ctr_this_week']*100:.2f}%. "
-                f"Its top performing ad is '{campaign_data['top_performing_ad']}'. "
-                f"An area for improvement is '{campaign_data['underperforming_segment']}'."
-            )
-            response["answer"] = answer_text
-        else:
-            response["answer"] = "Please specify which ad campaign you're asking about (e.g., 'Summer Blockbusters', 'New Tech Launch')."
-    elif "hello" in question or "hi" in question:
-        response["answer"] = "Hello! How can I help you with ad campaign insights?"
-    elif "thank you" in question:
-        response["answer"] = "You're welcome!"
+    # Convert mock analytics data to a readable string for the LLM
+    analytics_context = "Current Mock Ad Campaign Analytics Data:\n\n"
+    for campaign, data in MOCK_AD_CAMPAIGN_ANALYTICS.items():
+        analytics_context += f"Campaign: {campaign}\n"
+        for key, value in data.items():
+            if isinstance(value, (int, float)):
+                analytics_context += f"- {key.replace('_', ' ').title()}: {value:,}\n"
+            else:
+                analytics_context += f"- {key.replace('_', ' ').title()}: {value}\n"
+        analytics_context += "\n"
 
-    time.sleep(random.uniform(0.5, 1.5)) # Simulate LLM processing time
-    return jsonify(response)
+    try:
+        completion = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo", # You can use "gpt-4" for potentially better results but higher cost
+            messages=[
+                {"role": "system", "content": f"You are an expert ad campaign analyst for a streaming service. You must answer questions based ONLY on the provided analytics data. If you cannot find an answer in the data, state that you don't have enough information. Do not invent data or make assumptions. Be concise and professional. Here is the current ad campaign data:\n\n{analytics_context}"},
+                {"role": "user", "content": question}
+            ]
+        )
+        llm_response = completion.choices[0].message.content
+        return jsonify({"answer": llm_response})
+
+    except openai.APIConnectionError as e:
+        print(f"OpenAI API connection error: {e}")
+        return jsonify({"answer": "Could not connect to OpenAI API. Please check your internet connection or API status."}), 500
+    except openai.RateLimitError as e:
+        print(f"OpenAI API rate limit exceeded: {e}")
+        return jsonify({"answer": "OpenAI API rate limit exceeded. Please try again shortly."}), 500
+    except openai.APIStatusError as e:
+        print(f"OpenAI API status error: {e}")
+        return jsonify({"answer": f"OpenAI API error: {e.status_code} - {e.response}"}), 500
+    except Exception as e:
+        print(f"An unexpected error occurred with OpenAI API: {e}")
+        return jsonify({"answer": f"An unexpected error occurred: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
