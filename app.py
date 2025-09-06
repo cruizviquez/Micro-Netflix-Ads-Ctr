@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier # Changed to RandomForestClassifier
 
 # --- OpenAI for our "real" LLM ---
 import openai
@@ -149,7 +149,7 @@ def train_mock_ctr_model():
 
     pipeline = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('classifier', LogisticRegression(solver='liblinear', random_state=42, C=0.5))
+        ('classifier', RandomForestClassifier(n_estimators=100, random_state=42, max_depth=10)) # Using RandomForestClassifier
     ])
 
     pipeline.fit(X, y)
