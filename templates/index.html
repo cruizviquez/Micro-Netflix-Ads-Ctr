@@ -4,12 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Micro-Netflix CTR Demo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Add some basic styling for the logo */
+        .header {
+            background-color: #000000;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            height: 40px; /* Adjust size as needed */
+            width: auto;
+        }
+        
+        .header h1 {
+            color: #e50914; /* Netflix red */
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Micro-Netflix</h1>
-        <div class="user-profile-controls">
+    <header class="header">
+        <img src="{{ url_for('static', filename='images/netflix-logo.png') }}" alt="Netflix Logo" class="logo">
+        <h1>Micro-Netflix CTR Demo</h1>
+    </header>
+    
+    <div class="user-profile-controls">
             <h2>User Profile (Simulated)</h2>
             <label for="userAge">Age:</label>
             <input type="number" id="userAge" value="30" min="18" max="99">
