@@ -73,7 +73,9 @@ optimal_ad = agent.predict(viewer_profile)
 - Logistic Regression (baseline): 0.78 AUC
 - Random Forest: 0.85 AUC
 - XGBoost: 0.87 AUC
-
+- DQN Agent: Learns optimal ad placement timing
+- Contextual Bandit: Balances exploration vs exploitation
+- PPO: Optimizes long-term conversion value
 
 ## Demo
 ![App Screenshot](screenshots/demo.png)
