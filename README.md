@@ -32,7 +32,7 @@ This project implements an RL agent that learns to maximize ad conversion rates 
 
 ## Installation
 
-```bash
+`bash
 pip install -r requirements.txt
 
 
@@ -57,13 +57,26 @@ optimal_ad = agent.predict(viewer_profile)
     Real-time adaptation under 50ms
 
 
-Technologies
+## Technologies
 
     Python 3.8+
     TensorFlow/PyTorch for RL
     Hugging Face Transformers for LLM
     OpenAI Gym for environment
 
+
+## Dataset
+- Age, Gender, Device Type, Watch Time, Genre Preference
+- 10,000 historical ad impressions with CTR labels
+
+## Models
+- Logistic Regression (baseline): 0.78 AUC
+- Random Forest: 0.85 AUC
+- XGBoost: 0.87 AUC
+
+
+## Demo
+![App Screenshot](screenshots/demo.png)
 
 
 
