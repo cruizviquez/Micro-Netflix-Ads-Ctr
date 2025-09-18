@@ -19,13 +19,30 @@ import openai
 app = Flask(__name__)
 
 # --- Configuration for OpenAI ---
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") # Read from environment variable for security
-if not OPENAI_API_KEY:
-    print("WARNING: OPENAI_API_KEY environment variable not set. LLM functionality will be disabled.")
-    print("Please set it in your Codespaces secrets or environment variables.")
-    openai_client = None
-else:
-    openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+#OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") # Read from environment variable for security
+#if not OPENAI_API_KEY:
+ #   print("WARNING: OPENAI_API_KEY environment variable not set. LLM functionality will be disabled.")
+  #  print("Please set it in your Codespaces secrets or environment variables.")
+   # openai_client = None
+#else:
+ #   openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+
+
+
+# Use Hugging Face's free inference API instead
+from transformers import pipeline
+
+# Initialize a local model (no API key needed)
+llm_generator = pipeline("text-generation", model="gpt2")
+
+def generate_ad_copy(user_profile):
+    prompt = f"Create an ad for user: {user_profile}"
+    return llm_generator(prompt, max_length=50)[0]['generated_text']
+
+
+
+
+
 
 # --- Simulated Data ---
 MOVIES = [
