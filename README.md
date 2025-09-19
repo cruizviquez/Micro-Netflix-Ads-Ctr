@@ -1,88 +1,192 @@
-# Micro-Netflix-Ads-Ctr
-A demo of real-time Ads CTR prediction and LLM analytics for Netflix
+# Micro Netflix Ads CTR Optimizer
 
-# Micro-Netflix-Ads-CTR
-
-A Reinforcement Learning system integrated with Large Language Models to optimize Click-Through Rates (CTR) for streaming video advertisements.
+A Netflix-style streaming platform demo showcasing real-time ad optimization using Machine Learning to maximize Click-Through Rates (CTR).
 
 ## Overview
 
-This project implements an RL agent that learns to maximize ad conversion rates by:
-- Selecting optimal ad placements within video content
-- Personalizing ad content using LLM-generated variations
-- Dynamically adjusting bidding strategies based on viewer engagement
+This project demonstrates an advanced ad targeting system for streaming platforms that:
+- Predicts CTR using Random Forest classification
+- Delivers personalized ad content based on user profiles
+- Features a Netflix-inspired UI with video playback
+- Includes real-time analytics with speedometer-style dashboards
 
-## Features
+## Demo Features
 
-- **RL Agent**: Deep Q-Network (or PPO) for sequential decision making
-- **LLM Integration**: Generates personalized ad copy variations
-- **Real-time CTR Optimization**: Adapts to viewer behavior patterns
-- **A/B Testing Framework**: Built-in experimentation capabilities
+### 🎬 Netflix-Style Interface
+- Black-themed UI with red accents
+- Video streaming with multiple shows
+- Interactive movie selection
+- Responsive design for all devices
 
-## Architecture
+### 📊 ML-Powered Ad Optimization
+- **Algorithm**: Random Forest Classifier (100 trees, max depth 10)
+- **Features**: User demographics, viewing habits, content context
+- **Real-time CTR prediction**: 0.02-0.08 average
+- **Personalized ad copy** using MockLLM
 
-├── agents/ # RL algorithms (DQN, PPO, etc.)
-├── models/ # LLM adapters and CTR prediction models
-├── environment/ # Streaming ad simulation environment
-├── data/ # Sample datasets and preprocessing
-├── utils/ # Helper functions and metrics
-└── experiments/ # Training scripts and results
+### 🎯 Ad Experience
+- Video playback with ad insertion after 10 seconds
+- Skip countdown timer (5 seconds)
+- Click tracking and performance analytics
+- A/B testing capabilities
 
+### 💬 Interactive Chat Assistant
+- Ask about campaign performance
+- Get insights on CTR metrics
+- Learn about optimization strategies
 
+### 📈 Analytics Dashboard
+- Speedometer-style gauges for real-time metrics
+- Live performance charts
+- Top performing campaigns
+- Hourly tracking
+
+## Tech Stack
+
+- **Backend**: Flask 2.3.2 (Python)
+- **ML Framework**: Scikit-learn 1.3.0
+- **Data Processing**: Pandas, NumPy
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Visualization**: Chart.js, GaugeJS
+- **Video**: HTML5 Video Player
 
 ## Installation
 
-`bash
-pip install -r requirements.txt
+### Prerequisites
+- Python 3.8+
+- pip
+- Virtual environment (recommended)
+
+### Quick Start
+
+1. **Clone the repository**
+
+'git clone https://github.com/cruizviquez/Micro-Netflix-Ads-Ctr.git
+'cd Micro-Netflix-Ads-Ctr
 
 
-from agents import CTROptimizer
-from environment import StreamingAdEnv
+ ### Run the setup script
 
-# Initialize environment and agent
-env = StreamingAdEnv()
-agent = CTROptimizer(env)
-
-# Train the agent
-agent.train(episodes=1000)
-
-# Deploy for inference
-optimal_ad = agent.predict(viewer_profile)
+'chmod +x run.sh
+'./run.sh
 
 
-## Performance
+### Start the application
 
-    25% improvement in CTR over baseline
-    15% reduction in ad fatigue
-    Real-time adaptation under 50ms
+'python3 app.py
 
 
-## Technologies
+### Access the application
 
-    Python 3.8+
-    TensorFlow/PyTorch for RL
-    Hugging Face Transformers for LLM
-    OpenAI Gym for environment
+    Open browser to http://localhost:5000
+    In GitHub Codespaces, use the forwarded URL
 
 
-## Dataset
-- Age, Gender, Device Type, Watch Time, Genre Preference
-- 10,000 historical ad impressions with CTR labels
-
-## Models
-- Logistic Regression (baseline): 0.78 AUC
-- Random Forest: 0.85 AUC
-- XGBoost: 0.87 AUC
-- DQN Agent: Learns optimal ad placement timing
-- Contextual Bandit: Balances exploration vs exploitation
-- PPO: Optimizes long-term conversion value
-
-## Demo
-![App Screenshot](screenshots/demo.png)
+## Project Structure
 
 
-
-
+Micro-Netflix-Ads-Ctr/
+├── app.py                 # Main Flask application
+├── requirements.txt       # Python dependencies
+├── run.sh                # Startup script
+├── templates/            # HTML templates
+│   ├── index.html        # Netflix-style homepage
+│   ├── dashboard.html    # Analytics dashboard
+│   └── test.html         # Testing interface
+├── static/
+│   ├── css/
+│   │   ├── netflix-style.css     # Main styles
+│   │   └── dashboard-gauges.css  # Dashboard styles
+│   └── js/
+│       ├── netflix-app.js        # Main app logic
+│       └── dashboard-gauges.js   # Dashboard scripts
+└── data/                 # Generated test data
 
 
 
+## Usage
+### Viewing Experience
+
+    Select a movie from the homepage
+    Video starts playing automatically
+    After 10 seconds, a personalized ad appears
+    Skip or click the ad to continue
+
+### Chat Assistant
+
+    Click the chat widget (bottom-right)
+    Ask questions like:
+        "What's the current CTR?"
+        "Show me performance metrics"
+        "How does optimization work?"
+
+### Analytics Dashboard
+
+    Navigate to /dashboard
+    View real-time metrics
+    Monitor campaign performance
+    Export reports
+
+
+## API Endpoints
+POST /api/optimize_ad       # Get optimized ad for user
+POST /api/report_click      # Track ad interactions
+POST /api/chat              # Chat assistant
+GET  /api/test_llm          # Test LLM functionality
+GET  /api/generate_test_data # Generate sample data
+GET  /dashboard             # Analytics dashboard
+
+
+
+
+## ML Model Details
+Features Used
+
+    User Profile: Age, gender, subscription tier, watch hours
+    Content Context: Genre preference, time of day
+    Ad Attributes: Category, creative freshness
+
+## Performance Metrics
+
+    Average CTR: 3.8%
+    Top campaigns: 7.2% CTR
+    Model accuracy: ~85%
+
+## Sample Data
+
+The system includes synthetic data generation for testing:
+
+    5000 training samples
+    User demographics distribution
+    Realistic viewing patterns
+    Click behavior simulation
+
+## Contributing
+
+Feel free to fork and submit pull requests. Areas for improvement:
+
+    Real LLM integration (GPT-4, Claude)
+    Advanced RL algorithms
+    More sophisticated targeting
+    Production-ready deployment
+
+## Future Enhancements
+
+Real-time bidding system
+Multi-armed bandit optimization
+Deep learning models
+Actual video ad integration
+Production database
+
+ 
+## User authentication
+
+License
+
+MIT License - See LICENSE file for details
+Author: Dr. Carlos Ruiz Viquez
+
+
+  #  Video samples from Google's public dataset
+    Inspired by Netflix's UI/UX
+    Built for demonstrating ML capabilities in ad tech
