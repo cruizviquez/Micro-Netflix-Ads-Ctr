@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mode - CTR Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 Test Mode</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/test" class="active">Test Mode</a>
+            </nav>
+        </header>
+
+        <div class="test-content">
+            <section class="test-section">
+                <h2>Sample User Profile</h2>
+                <div class="sample-data">
+                    <pre>{{ sample_user|tojson(indent=2) }}</pre>
+                </div>
+                <button onclick="testWithSampleUser()" class="btn-primary">Run Test</button>
+            </section>
+
+            <section class="test-section">
+                <h2>Generate Test Data</h2>
+                <p>Generate sample CTR data for testing and training</p>
+                <button onclick="generateTestData()" class="btn-secondary">Generate 1000 Samples</button>
+                <div id="dataGenResult"></div>
+            </section>
+
+            <section class="test-section">
+                <h2>Test Results</h2>
+                <div id="testResults" class="test-results"></div>
+            </section>
+
+            <section class="test-section">
+                <h2>API Endpoints</h2>
+                <div class="api-docs">
+                    <h3>Available Endpoints:</h3>
+                    <ul>
+                        <li><code>POST /simulate_ad_request</code> - Get optimized ad</li>
+                        <li><code>POST /api/optimize_ad</code> - Advanced optimization</li>
+                        <li><code>GET /api/test_llm</code> - Test LLM functionality</li>
+                        <li><code>GET /api/generate_test_data</code> - Generate test data</li>
+                        <li><code>POST /api/report_click</code> - Report ad click</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const sampleUser = {{ sample_user|tojson }};
+        const movies = {{ movies|tojson }};
+
+        function testWithSampleUser() {
+            const testData = {
+                user_profile: sampleUser,
+                content_context: {
+                    genre: movies[0].genre,
+                    movie_id: movies[0].id
+                }
+            };
+
+            fetch('/api/optimize_ad', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('testResults').innerHTML = `
+                    <h3>Test Results:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('testResults').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            });
+        }
+
+        function generateTestData() {
+            fetch('/api/generate_test_data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('dataGenResult').innerHTML = `
+                        <div class="success">
+                            <p>✅ Generated ${data.samples_generated} samples</p>
+                            <p>Overall CTR: ${data.overall_ctr}</p>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    document.getElementById('dataGenResult').innerHTML = `
+                        <div class="error">Error: ${error.message}</div>
+                    `;
+                });
+        }
+    </script>
+</body>
+</html>

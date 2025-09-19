@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTR Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 CTR Analytics Dashboard</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/dashboard" class="active">Dashboard</a>
+                <a href="/test">Test Mode</a>
+            </nav>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Total Impressions</h3>
+                    <div class="metric-value">{{ metrics.total_impressions|default('0') }}</div>
+                    <span class="metric-label">Ad views</span>
+                </div>
+                <div class="metric-card">
+                    <h3>Total Clicks</h3>
+                    <div class="metric-value">{{ metrics.total_clicks|default('0') }}</div>
+                    <span class="metric-label">User interactions</span>
+                </div>
+                <div class="metric-card highlight">
+                    <h3>Average CTR</h3>
+                    <div class="metric-value">{{ metrics.avg_ctr|default('0%') }}</div>
+                    <span class="metric-label">Click-through rate</span>
+                </div>
+                <div class="metric-card">
+                    <h3>Revenue</h3>
+                    <div class="metric-value">{{ metrics.revenue|default('$0') }}</div>
+                    <span class="metric-label">Total earnings</span>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3>Hourly Performance</h3>
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>CTR by Device Type</h3>
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="top-ads-section">
+                <h3>Top Performing Ads</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ad Name</th>
+                            <th>CTR</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ad in metrics.top_performing_ads %}
+                        <tr>
+                            <td>{{ ad.name }}</td>
+                            <td>{{ ad.ctr }}</td>
+                            <td><span class="status-badge success">Active</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="actions-section">
+                <button onclick="refreshData()" class="btn-primary">Refresh Data</button>
+                <button onclick="exportData()" class="btn-secondary">Export Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Hourly Performance Chart
+        const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
+        const hourlyData = {{ metrics.hourly_performance|tojson }};
+        
+        new Chart(hourlyCtx, {
+            type: 'line',
+            data: {
+                labels: hourlyData.hours,
+                datasets: [{
+                    label: 'Impressions',
+                    data: hourlyData.impressions,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }, {
+                    label: 'Clicks',
+                    data: hourlyData.clicks,
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Device CTR Chart
+        const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+        new Chart(deviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Mobile', 'Desktop', 'Smart TV', 'Tablet'],
+                datasets: [{
+                    data: [35, 25, 30, 10],
+                    backgroundColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 205, 86)',
+                        'rgb(75, 192, 192)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        function refreshData() {
+            location.reload();
+        }
+
+        function exportData() {
+            alert('Export functionality would download a CSV report');
+        }
+    </script>
+</body>
+</html>

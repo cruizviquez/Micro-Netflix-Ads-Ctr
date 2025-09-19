@@ -1,50 +1,23 @@
-# app.py
+# app.py - Complete File
 from flask import Flask, render_template, request, jsonify, url_for
 import random
 import time
 import os
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
-# --- Scikit-learn for our "real" AI model ---
+# ML imports
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier # Changed to RandomForestClassifier
-
-# --- OpenAI for our "real" LLM ---
-import openai
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score
 
 app = Flask(__name__)
 
-# --- Configuration for OpenAI ---
-#OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") # Read from environment variable for security
-#if not OPENAI_API_KEY:
- #   print("WARNING: OPENAI_API_KEY environment variable not set. LLM functionality will be disabled.")
-  #  print("Please set it in your Codespaces secrets or environment variables.")
-   # openai_client = None
-#else:
- #   openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
-
-
-
-# Use Hugging Face's free inference API instead
-from transformers import pipeline
-
-# Initialize a local model (no API key needed)
-llm_generator = pipeline("text-generation", model="gpt2")
-
-def generate_ad_copy(user_profile):
-    prompt = f"Create an ad for user: {user_profile}"
-    return llm_generator(prompt, max_length=50)[0]['generated_text']
-
-
-
-
-
-
-# --- Simulated Data ---
+# --- Mock Data ---
 MOVIES = [
     {"id": "mv1", "title": "The Cosmic Odyssey", "genre": "SciFi", "thumbnail": "https://via.placeholder.com/200x120?text=SciFi"},
     {"id": "mv2", "title": "Laughing Gas", "genre": "Comedy", "thumbnail": "https://via.placeholder.com/200x120?text=Comedy"},
@@ -61,46 +34,54 @@ ADS_INVENTORY = [
     {"id": "ad5", "title": "Tropical Escapes", "category": "Travel", "creative_freshness": 0.5, "image": "https://via.placeholder.com/640x360?text=Travel+Ad"},
 ]
 
-# --- Mock Ad Campaign Analytics (for LLM context) ---
-# This data will be fed to the LLM as context
-MOCK_AD_CAMPAIGN_ANALYTICS = {
-    "Summer Blockbusters": {
-        "impressions_this_week": 1500000,
-        "clicks_this_week": 35000,
-        "ctr_this_week": 0.023,
-        "budget_spent": 150000,
-        "status": "On Track",
-        "top_performing_ad": "Pixel Paladins Game Ad",
-        "underperforming_segment": "Users over 60"
-    },
-    "New Tech Launch": {
-        "impressions_this_week": 800000,
-        "clicks_this_week": 28000,
-        "ctr_this_week": 0.035,
-        "budget_spent": 120000,
-        "status": "Exceeding Expectations",
-        "top_performing_ad": "FuturePhone Pro",
-        "underperforming_segment": "Late night viewers"
-    },
-    "Travel Adventures": {
-        "impressions_this_week": 600000,
-        "clicks_this_week": 15000,
-        "ctr_this_week": 0.025,
-        "budget_spent": 80000,
-        "status": "Meeting Targets",
-        "top_performing_ad": "Tropical Escapes",
-        "underperforming_segment": "Youth demographics"
-    }
-}
+# --- Mock LLM Class ---
+class MockLLM:
+    def generate_ad_copy(self, user_profile):
+        templates = {
+            'young_mobile': [
+                "🎬 Binge your favorites on-the-go! 50% off mobile plan",
+                "📱 Stream anywhere, anytime. Student discount available!"
+            ],
+            'adult_tv': [
+                "🏠 Family movie night? Get 4K streaming for your Smart TV",
+                "Premium content, zero ads. Free trial for 30 days!"
+            ],
+            'senior_desktop': [
+                "Easy streaming, classic content. Simple interface, great value",
+                "Discover timeless movies and shows. Easy setup guaranteed"
+            ],
+            'default': [
+                "Personalized entertainment just for you. Start free trial",
+                "Thousands of titles waiting. Join millions of happy viewers"
+            ]
+        }
+        
+        age = user_profile.get('age', 30)
+        device = user_profile.get('device', 'desktop').lower()
+        
+        if age < 30 and 'mobile' in device:
+            segment = 'young_mobile'
+        elif age >= 50:
+            segment = 'senior_desktop'
+        elif 'tv' in device:
+            segment = 'adult_tv'
+        else:
+            segment = 'default'
+            
+        return random.choice(templates[segment])
+    
+    def analyze_performance(self, ad_text, ctr):
+        if ctr > 0.05:
+            return f"High performing ad! CTR: {ctr:.1%}. Key factors: engaging copy, right audience match"
+        else:
+            return f"Consider A/B testing different copy. Current CTR: {ctr:.1%}"
 
-# --- AI Model Training (Done at app startup for demo purposes) ---
-ml_pipeline = None # Global variable to hold our trained model
-
+# --- ML Model Training ---
 def train_mock_ctr_model():
     print("Training mock CTR prediction model...")
-    np.random.seed(42) # For reproducibility
+    np.random.seed(42)
 
-    num_samples = 5000 # Smaller dataset for quick training at startup
+    num_samples = 5000
 
     # Define all possible values for categorical features
     all_genders = ['Male', 'Female', 'Other']
@@ -109,18 +90,17 @@ def train_mock_ctr_model():
     all_ad_categories = ['Automotive', 'Food', 'Tech', 'Fashion', 'Travel']
     all_ad_placement_time_slots = ['Morning', 'Afternoon', 'Evening', 'Late Night']
 
-    # Generate synthetic features for training
+    # Generate synthetic features
     user_age = np.random.randint(18, 65, num_samples)
     user_gender = np.random.choice(all_genders, num_samples)
     user_subscription_tier = np.random.choice(all_subscription_tiers, num_samples)
     user_watch_hours_monthly = np.random.normal(30, 10, num_samples).clip(0, 100)
     user_genre_preference = np.random.choice(all_user_genre_preferences, num_samples)
-
     ad_category = np.random.choice(all_ad_categories, num_samples)
     ad_creative_freshness = np.random.uniform(0, 1, num_samples)
     ad_placement_time_slot = np.random.choice(all_ad_placement_time_slots, num_samples)
 
-    # Generate labels (clicks) based on some underlying "true" logic for the model to learn
+    # Generate labels
     ctr_base_prob = 0.02
     ctr_probs = ctr_base_prob + \
                 (user_age / 1000) + \
@@ -128,7 +108,7 @@ def train_mock_ctr_model():
                 (ad_creative_freshness * 0.03) + \
                 (np.where(user_genre_preference == 'SciFi', 0.02, 0)) + \
                 (np.where(user_subscription_tier == 'Ad-Supported', 0.01, 0)) + \
-                (np.where((user_gender == 'Male') & (user_genre_preference == 'Action'), 0.03, 0)) # Stronger Male/Action bias
+                (np.where((user_gender == 'Male') & (user_genre_preference == 'Action'), 0.03, 0))
 
     ctr_probs = np.clip(ctr_probs, 0.001, 0.1)
     clicks = (np.random.rand(num_samples) < ctr_probs).astype(int)
@@ -145,7 +125,6 @@ def train_mock_ctr_model():
         'click': clicks
     })
 
-    # Define features and target
     X = train_data.drop('click', axis=1)
     y = train_data['click']
 
@@ -166,20 +145,97 @@ def train_mock_ctr_model():
 
     pipeline = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('classifier', RandomForestClassifier(n_estimators=100, random_state=42, max_depth=10)) # Using RandomForestClassifier
+        ('classifier', RandomForestClassifier(n_estimators=100, random_state=42, max_depth=10))
     ])
 
     pipeline.fit(X, y)
     print("Mock CTR model trained successfully.")
     return pipeline, X.columns
 
-# Initialize the ML pipeline immediately when the script runs
+# --- Ad Optimizer Class ---
+class AdOptimizer:
+    def __init__(self, ml_pipeline):
+        self.ml_pipeline = ml_pipeline
+        self.llm = MockLLM()
+        self.performance_history = []
+    
+    def select_best_ad(self, user_profile, content_context, ads_inventory):
+        best_ad = None
+        max_score = -1.0
+        predictions = []
+        
+        for ad in ads_inventory:
+            input_data = self._prepare_ml_input(user_profile, ad, content_context)
+            predicted_ctr = self.ml_pipeline.predict_proba(input_data)[0][1]
+            score = self._calculate_ad_score(predicted_ctr, user_profile, ad, content_context)
+            
+            predictions.append({
+                'ad': ad,
+                'predicted_ctr': predicted_ctr,
+                'score': score
+            })
+            
+            if score > max_score:
+                max_score = score
+                best_ad = ad.copy()
+                best_ad['predicted_ctr'] = predicted_ctr
+                best_ad['score'] = score
+        
+        if best_ad:
+            best_ad['personalized_copy'] = self.llm.generate_ad_copy(user_profile)
+            best_ad['insights'] = self.llm.analyze_performance(
+                best_ad['personalized_copy'], 
+                best_ad['predicted_ctr']
+            )
+        
+        return best_ad, predictions
+    
+    def _prepare_ml_input(self, user_profile, ad, content_context):
+        return pd.DataFrame([{
+            'user_age': user_profile.get('age', 30),
+            'user_gender': user_profile.get('gender', 'Other'),
+            'user_subscription_tier': user_profile.get('subscription_tier', 'Standard'),
+            'user_watch_hours_monthly': user_profile.get('watch_hours', 20),
+            'user_genre_preference': user_profile.get('genre_preference', 'Drama'),
+            'ad_category': ad['category'],
+            'ad_creative_freshness': ad['creative_freshness'],
+            'ad_placement_time_slot': self._get_time_slot()
+        }])
+    
+    def _calculate_ad_score(self, predicted_ctr, user_profile, ad, content_context):
+        score = predicted_ctr
+        
+        if user_profile.get('genre_preference') == content_context.get('genre'):
+            score *= 1.2
+        
+        score *= (1 + ad['creative_freshness'] * 0.1)
+        
+        hour = datetime.now().hour
+        if 19 <= hour <= 22:
+            score *= 1.1
+        
+        return min(score, 1.0)
+    
+    def _get_time_slot(self):
+        hour = datetime.now().hour
+        if 6 <= hour < 12:
+            return 'Morning'
+        elif 12 <= hour < 18:
+            return 'Afternoon'
+        elif 18 <= hour < 23:
+            return 'Evening'
+        else:
+            return 'Late Night'
+
+# Initialize components
 try:
     ml_pipeline, _ = train_mock_ctr_model()
-    print("ML pipeline loaded/trained successfully at startup.")
+    ad_optimizer = AdOptimizer(ml_pipeline)
+    print("All components initialized successfully.")
 except Exception as e:
-    print(f"ERROR: Failed to initialize ML pipeline at startup: {e}")
-    ml_pipeline = None # Indicate failure
+    print(f"ERROR: Failed to initialize components: {e}")
+    ml_pipeline = None
+    ad_optimizer = None
 
 # --- Flask Routes ---
 @app.route('/')
@@ -192,102 +248,239 @@ def get_movies():
 
 @app.route('/simulate_ad_request', methods=['POST'])
 def simulate_ad_request():
-    global ml_pipeline
-    if ml_pipeline is None:
-        return jsonify({"error": "AI model not initialized. Service unavailable."}), 503
+    if ad_optimizer is None:
+        return jsonify({"error": "AI model not initialized"}), 503
 
     data = request.json
     user_profile = data.get('user_profile')
     content_context = data.get('content_context')
-    selected_movie_genre = content_context.get('genre')
 
     if not user_profile or not content_context:
-        return jsonify({"error": "Missing user_profile or content_context"}), 400
+        return jsonify({"error": "Missing required data"}), 400
 
-    best_ad = None
-    max_ctr = -1.0
-
-    for ad in ADS_INVENTORY:
-        input_data = pd.DataFrame([{
-            'user_age': user_profile['age'],
-            'user_gender': user_profile['gender'],
-            'user_subscription_tier': user_profile['subscription_tier'],
-            'user_watch_hours_monthly': user_profile['watch_hours'],
-            'user_genre_preference': user_profile['genre_preference'],
-            'ad_category': ad['category'],
-            'ad_creative_freshness': ad['creative_freshness'],
-            'ad_placement_time_slot': 'Evening' # Fixed for simplicity in demo
-        }])
-
-        if selected_movie_genre == 'SciFi' and ad['category'] == 'Tech':
-            input_data.loc[:, 'ad_creative_freshness'] = min(1.0, input_data['ad_creative_freshness'] * 1.2)
-        elif selected_movie_genre == 'Comedy' and ad['category'] == 'Food':
-             input_data.loc[:, 'ad_creative_freshness'] = min(1.0, input_data['ad_creative_freshness'] * 1.1)
-
-        predicted_proba = ml_pipeline.predict_proba(input_data)[0][1]
-
-        if predicted_proba > max_ctr:
-            max_ctr = predicted_proba
-            best_ad = ad.copy()
-            best_ad['predicted_ctr'] = f"{predicted_proba*100:.2f}%"
+    best_ad, all_predictions = ad_optimizer.select_best_ad(
+        user_profile, 
+        content_context, 
+        ADS_INVENTORY
+    )
 
     if best_ad:
-        time.sleep(0.5)
+        time.sleep(0.5)  # Simulate processing
         return jsonify(best_ad)
     else:
-        return jsonify({"error": "No suitable ad found"}), 404
+                return jsonify({"error": "No suitable ad found"}), 404
+
+@app.route('/api/optimize_ad', methods=['POST'])
+def optimize_ad():
+    """Main API endpoint for ad optimization"""
+    try:
+        data = request.json
+        user_profile = data.get('user_profile')
+        content_context = data.get('content_context')
+        
+        if not user_profile or not content_context:
+            return jsonify({"error": "Missing required data"}), 400
+        
+        # Get optimized ad
+        best_ad, all_predictions = ad_optimizer.select_best_ad(
+            user_profile, 
+            content_context, 
+            ADS_INVENTORY
+        )
+        
+        if best_ad:
+            # Log the impression
+            log_impression(user_profile, best_ad, content_context)
+            
+            return jsonify({
+                "success": True,
+                "ad": best_ad,
+                "alternatives": all_predictions[:3]  # Top 3 alternatives
+            })
+        else:
+            return jsonify({"error": "No suitable ad found"}), 404
+            
+    except Exception as e:
+        app.logger.error(f"Error in optimize_ad: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/ad_event', methods=['POST'])
 def ad_event():
+    """Log ad events (impressions, clicks, etc.)"""
     event_data = request.json
     print(f"AD EVENT LOGGED: {event_data}")
+    log_event(event_data)
     return jsonify({"status": "logged", "event": event_data}), 200
 
-# --- REAL LLM Endpoint ---
-@app.route('/ask_llm', methods=['POST'])
-def ask_llm():
-    if openai_client is None:
-        return jsonify({"answer": "LLM functionality is disabled because OPENAI_API_KEY is not set. Please check Codespaces secrets."}), 503
+@app.route('/api/report_click', methods=['POST'])
+def report_click():
+    """Track ad clicks for learning"""
+    data = request.json
+    log_click_event(data)
+    return jsonify({"status": "recorded"})
 
-    question = request.json.get('question', '').strip()
-    if not question:
-        return jsonify({"answer": "Please ask a question."}), 400
+@app.route('/test', methods=['GET'])
+def test_page():
+    """Test page for development"""
+    sample_user = {
+        'age': 28,
+        'gender': 'Male',
+        'subscription_tier': 'Standard',
+        'watch_hours': 35,
+        'genre_preference': 'Action',
+        'device': 'mobile'
+    }
+    return render_template('test.html', sample_user=sample_user, movies=MOVIES)
 
-    # Convert mock analytics data to a readable string for the LLM
-    analytics_context = "Current Mock Ad Campaign Analytics Data:\n\n"
-    for campaign, data in MOCK_AD_CAMPAIGN_ANALYTICS.items():
-        analytics_context += f"Campaign: {campaign}\n"
-        for key, value in data.items():
-            if isinstance(value, (int, float)):
-                analytics_context += f"- {key.replace('_', ' ').title()}: {value:,}\n"
-            else:
-                analytics_context += f"- {key.replace('_', ' ').title()}: {value}\n"
-        analytics_context += "\n"
+@app.route('/dashboard')
+def dashboard():
+    """Analytics dashboard"""
+    metrics = calculate_metrics()
+    return render_template('dashboard.html', metrics=metrics)
 
+@app.route('/api/test_llm', methods=['GET'])
+def test_llm():
+    """Test LLM functionality"""
+    test_user = {
+        'age': 28,
+        'device': 'mobile',
+        'watch_hours': 4.5,
+        'genre_preference': 'Action'
+    }
+    
+    llm = MockLLM()
+    ad_copy = llm.generate_ad_copy(test_user)
+    
+    return jsonify({
+        'test_user': test_user,
+        'generated_ad': ad_copy,
+        'status': 'LLM working correctly'
+    })
+
+@app.route('/api/generate_test_data', methods=['GET'])
+def generate_test_data():
+    """Generate sample CTR data for testing"""
     try:
-        completion = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo", # You can use "gpt-4" for potentially better results but higher cost
-            messages=[
-                {"role": "system", "content": f"You are an expert ad campaign analyst for a streaming service. You must answer questions based ONLY on the provided analytics data. If you cannot find an answer in the data, state that you don't have enough information. Do not invent data or make assumptions. Be concise and professional. Here is the current ad campaign data:\n\n{analytics_context}"},
-                {"role": "user", "content": question}
-            ]
-        )
-        llm_response = completion.choices[0].message.content
-        return jsonify({"answer": llm_response})
-
-    except openai.APIConnectionError as e:
-        print(f"OpenAI API connection error: {e}")
-        return jsonify({"answer": "Could not connect to OpenAI API. Please check your internet connection or API status."}), 500
-    except openai.RateLimitError as e:
-        print(f"OpenAI API rate limit exceeded. Please try again shortly. {e}"), 500
-        return jsonify({"answer": f"OpenAI API rate limit exceeded. Please try again shortly."}), 429 # 429 Too Many Requests
-    except openai.APIStatusError as e:
-        print(f"OpenAI API status error: {e}")
-        return jsonify({"answer": f"OpenAI API error: {e.status_code} - {e.response.json().get('message', 'Unknown error')}"}), 500
+        df = generate_sample_data(1000)
+        return jsonify({
+            'success': True,
+            'samples_generated': len(df),
+            'overall_ctr': f"{df['clicked'].mean():.2%}",
+            'data_preview': df.head(5).to_dict('records')
+        })
     except Exception as e:
-        print(f"An unexpected error occurred with OpenAI API: {e}")
-        return jsonify({"answer": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({'error': str(e)}), 500
 
+# --- Helper Functions ---
+def log_impression(user_profile, ad, context):
+    """Log ad impression for analysis"""
+    timestamp = datetime.now().isoformat()
+    log_entry = {
+        'timestamp': timestamp,
+        'event_type': 'impression',
+        'user': user_profile,
+        'ad_id': ad.get('id'),
+        'ad_title': ad.get('title'),
+        'predicted_ctr': ad.get('predicted_ctr'),
+        'context': context
+    }
+    app.logger.info(f"Impression: {log_entry}")
+
+def log_event(event_data):
+    """Generic event logging"""
+    timestamp = datetime.now().isoformat()
+    event_data['timestamp'] = timestamp
+    app.logger.info(f"Event: {event_data}")
+
+def log_click_event(data):
+    """Log click events"""
+    timestamp = datetime.now().isoformat()
+    click_data = {
+        'timestamp': timestamp,
+        'event_type': 'click',
+        'ad_id': data.get('ad_id'),
+        'user_id': data.get('user_id'),
+        'session_id': data.get('session_id')
+    }
+    app.logger.info(f"Click: {click_data}")
+
+def calculate_metrics():
+    """Calculate performance metrics for dashboard"""
+    # In production, these would come from a database
+    return {
+        'total_impressions': random.randint(10000, 50000),
+        'total_clicks': random.randint(500, 2500),
+        'avg_ctr': f"{random.uniform(0.02, 0.08):.2%}",
+        'revenue': f"${random.randint(5000, 25000):,}",
+        'top_performing_ads': [
+            {'name': 'FuturePhone Pro', 'ctr': '7.2%'},
+            {'name': 'Quantum Car', 'ctr': '5.8%'},
+            {'name': 'Snack Bites', 'ctr': '4.9%'}
+        ],
+        'hourly_performance': generate_hourly_data()
+    }
+
+def generate_hourly_data():
+    """Generate mock hourly performance data"""
+    hours = list(range(24))
+    return {
+        'hours': hours,
+        'impressions': [random.randint(100, 1000) for _ in hours],
+        'clicks': [random.randint(5, 50) for _ in hours]
+    }
+
+def generate_sample_data(n_samples=1000):
+    """Generate sample CTR data for testing"""
+    np.random.seed(42)
+    
+    data = []
+    for _ in range(n_samples):
+        age = np.random.randint(18, 70)
+        gender = np.random.choice(['Male', 'Female', 'Other'])
+        device = np.random.choice(['mobile', 'desktop', 'smart_tv', 'tablet'])
+        watch_time_hours = np.random.exponential(2.5)
+        preferred_genre = np.random.choice(['Action', 'Comedy', 'Drama', 'SciFi', 'Mystery'])
+        
+        # Simulate CTR logic
+        base_ctr = 0.02
+        if 25 <= age <= 45:
+            base_ctr *= 1.5
+        if device == 'smart_tv':
+            base_ctr *= 1.3
+        
+        ctr = base_ctr * np.random.uniform(0.7, 1.3)
+        clicked = 1 if np.random.random() < ctr else 0
+        
+        data.append({
+            'user_id': f'user_{_}',
+            'age': age,
+            'gender': gender,
+            'device': device,
+            'watch_time_hours': round(watch_time_hours, 2),
+            'preferred_genre': preferred_genre,
+            'clicked': clicked,
+            'actual_ctr': round(ctr, 4)
+        })
+    
+    df = pd.DataFrame(data)
+    df.to_csv('data/sample_ctr_data.csv', index=False)
+    return df
+
+# --- Error Handlers ---
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({'error': 'Resource not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
+    # Create necessary directories
+    os.makedirs('data', exist_ok=True)
+    os.makedirs('templates', exist_ok=True)
+    os.makedirs('static/css', exist_ok=True)
+    os.makedirs('static/js', exist_ok=True)
+    
+    # Run the Flask app
     app.run(host='0.0.0.0', port=5000, debug=True)
