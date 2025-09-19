@@ -1,0 +1,180 @@
+/* Dashboard Specific Styles */
+.dashboard-main {
+    padding: 100px 50px 50px;
+    min-height: 100vh;
+    background: #141414;
+}
+
+.dashboard-title {
+    text-align: center;
+    font-size: 36px;
+    margin-bottom: 40px;
+    color: #fff;
+}
+
+/* Gauge Cards */
+.gauges-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 60px;
+    flex-wrap: wrap;
+}
+
+.gauge-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    min-width: 250px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.gauge-card h3 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #e50914;
+}
+
+.gauge-card canvas {
+    margin: 0 auto;
+}
+
+.gauge-value {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #fff;
+}
+
+.gauge-label {
+    font-size: 14px;
+    color: #888;
+}
+
+/* Live Metrics */
+.live-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.metric-tile {
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #333;
+}
+
+.metric-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(229, 9, 20, 0.3);
+}
+
+.metric-tile i {
+    font-size: 36px;
+    color: #e50914;
+}
+
+.metric-info {
+    flex: 1;
+}
+
+.metric-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.metric-label {
+    font-size: 14px;
+    color: #888;
+}
+
+/* Chart Section */
+.chart-section {
+    background: #1a1a1a;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 40px;
+}
+
+.chart-section h2 {
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+/* Performance Section */
+.performance-section {
+    background: #1a1a1a;
+    border-radius: 15px;
+    padding: 30px;
+}
+
+.performance-section h2 {
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.performance-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.performance-card {
+    background: #222;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ad-name {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.ad-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.performance-bar {
+    flex: 1;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    margin: 0 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e50914 0%, #f40612 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.metric-tile.updating {
+    animation: pulse 0.5s ease;
+}

@@ -3,103 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro Netflix Ads CTR Optimizer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Micro Netflix Ads - Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/netflix-style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎬 Micro Netflix Ads CTR Optimizer</h1>
-            <nav>
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
+    <div class="netflix-container">
+        <!-- Netflix Header -->
+        <header class="netflix-header">
+            <div class="logo">
+                <h1>MICROFLIX</h1>
+            </div>
+            <nav class="netflix-nav">
+                <a href="/" class="active">Home</a>
+                <a href="/dashboard">Analytics</a>
                 <a href="/test">Test Mode</a>
             </nav>
+            <div class="user-menu">
+                <span>Demo User</span>
+                <i class="fas fa-user-circle"></i>
+            </div>
         </header>
 
-        <div class="main-content">
-            <section class="movie-selection">
-                <h2>Step 1: Select a Movie</h2>
-                <div class="movies-grid">
-                    {% for movie in movies %}
-                    <div class="movie-card" onclick="selectMovie('{{ movie.id }}', '{{ movie.genre }}')" data-movie-id="{{ movie.id }}">
-                        <img src="{{ movie.thumbnail }}" alt="{{ movie.title }}">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>Ad Optimization Demo</h1>
+                <p>Select a show to see personalized ad insertion powered by ML</p>
+            </div>
+        </section>
+
+        <!-- Shows Grid -->
+        <section class="shows-section">
+            <h2 class="section-title">Popular Shows</h2>
+            <div class="shows-carousel">
+                {% for movie in movies %}
+                <div class="show-card" onclick="playMovie('{{ movie.id }}', '{{ movie.genre }}')">
+                    <img src="{{ movie.thumbnail }}" alt="{{ movie.title }}">
+                    <div class="show-info">
                         <h3>{{ movie.title }}</h3>
-                        <span class="genre-tag">{{ movie.genre }}</span>
+                        <span class="genre">{{ movie.genre }}</span>
                     </div>
-                    {% endfor %}
+                    <div class="play-overlay">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
                 </div>
-            </section>
+                {% endfor %}
+            </div>
+        </section>
 
-            <section class="user-profile">
-                <h2>Step 2: Define User Profile</h2>
-                <form id="userProfileForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="age">Age</label>
-                            <input type="number" id="age" name="age" min="18" max="80" value="28" required>
+        <!-- Video Player Modal -->
+        <div id="videoPlayerModal" class="video-modal" style="display: none;">
+            <div class="video-container">
+                <video id="mainVideo" controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <!-- Ad Overlay -->
+                <div id="adOverlay" class="ad-overlay" style="display: none;">
+                    <div class="ad-container">
+                        <div class="ad-header">
+                            <span>Ad</span>
+                            <span id="skipTimer">Skip in <span id="countdown">5</span>s</span>
+                            <button id="skipButton" class="skip-button" style="display: none;" onclick="skipAd()">Skip Ad</button>
                         </div>
-                        <div class="form-group">
-                            <label for="gender">Gender</label>
-                            <select id="gender" name="gender" required>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
+                        <div id="adContent" class="ad-content">
+                            <!-- Dynamic ad content will be inserted here -->
                         </div>
+                        <button class="ad-cta" onclick="clickAd()">Learn More</button>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="subscription_tier">Subscription</label>
-                            <select id="subscription_tier" name="subscription_tier" required>
-                                <option value="Ad-Supported">Ad-Supported</option>
-                                <option value="Standard">Standard</option>
-                                <option value="Premium">Premium</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="watch_hours">Monthly Watch Hours</label>
-                            <input type="number" id="watch_hours" name="watch_hours" min="0" max="200" value="30" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="genre_preference">Favorite Genre</label>
-                            <select id="genre_preference" name="genre_preference" required>
-                                <option value="Action">Action</option>
-                                <option value="Comedy">Comedy</option>
-                                <option value="Drama">Drama</option>
-                                <option value="SciFi">SciFi</option>
-                                <option value="Mystery">Mystery</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="device">Device</label>
-                            <select id="device" name="device" required>
-                                <option value="mobile">Mobile</option>
-                                <option value="desktop">Desktop</option>
-                                <option value="smart_tv">Smart TV</option>
-                                <option value="tablet">Tablet</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </section>
+                </div>
+                
+                <button class="close-video" onclick="closeVideo()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
 
-            <section class="action-section">
-                <button onclick="requestOptimizedAd()" class="btn-primary">Get Optimized Ad</button>
-                <button onclick="testLLM()" class="btn-secondary">Test LLM</button>
-            </section>
+        <!-- User Profile Section (Hidden but used for data) -->
+        <form id="userProfileForm" style="display: none;">
+            <input type="number" name="age" value="28">
+            <select name="gender"><option value="Male">Male</option></select>
+            <select name="subscription_tier"><option value="Standard">Standard</option></select>
+            <input type="number" name="watch_hours" value="30">
+            <select name="genre_preference"><option value="Action">Action</option></select>
+            <select name="device"><option value="smart_tv">Smart TV</option></select>
+        </form>
 
-            <section id="results" class="results-section" style="display: none;">
-                <h2>Results</h2>
-                <div id="selectedMovie" class="selected-movie"></div>
-                <div id="adResult" class="ad-result"></div>
-                <div id="alternatives" class="alternatives"></div>
-            </section>
+        <!-- LLM Chat Widget -->
+        <div class="chat-widget">
+            <div class="chat-header" onclick="toggleChat()">
+                <i class="fas fa-comments"></i>
+                <span>Ask about campaigns</span>
+                <i class="fas fa-chevron-up" id="chatToggle"></i>
+            </div>
+            <div class="chat-body" id="chatBody" style="display: none;">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <p>Hi! I can help you understand our ad campaigns. Ask me anything!</p>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Type your question..." onkeypress="handleChatKeypress(event)">
+                    <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/netflix-app.js') }}"></script>
 </body>
 </html>

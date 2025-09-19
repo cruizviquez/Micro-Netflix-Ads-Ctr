@@ -1,0 +1,408 @@
+/* Netflix-style CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #141414;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+.netflix-container {
+    min-height: 100vh;
+    background-color: #141414;
+}
+
+/* Header */
+.netflix-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 20px 50px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0));
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo h1 {
+    color: #e50914;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.netflix-nav {
+    display: flex;
+    gap: 30px;
+}
+
+.netflix-nav a {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.netflix-nav a.active,
+.netflix-nav a:hover {
+    color: #fff;
+    font-weight: bold;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.user-menu i {
+    font-size: 32px;
+}
+
+/* Hero Section */
+.hero-section {
+    height: 60vh;
+    background: linear-gradient(to top, #141414 0%, transparent 60%),
+                linear-gradient(to right, rgba(0,0,0,0.8) 40%, transparent 80%),
+                url('https://source.unsplash.com/1600x900/?cinema,movie');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    padding: 0 50px;
+    margin-top: 70px;
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.hero-content p {
+    font-size: 20px;
+    color: #ccc;
+}
+
+/* Shows Section */
+.shows-section {
+    padding: 20px 50px;
+}
+
+.section-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.shows-carousel {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px 0;
+    scrollbar-width: none;
+}
+
+.shows-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.show-card {
+    position: relative;
+    min-width: 250px;
+    height: 140px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.show-card:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.show-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.show-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+}
+
+.show-info h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.show-info .genre {
+    font-size: 12px;
+    color: #ccc;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.show-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.play-overlay i {
+    font-size: 64px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Video Player Modal */
+.video-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.video-container {
+    position: relative;
+    width: 90%;
+    max-width: 1200px;
+}
+
+#mainVideo {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+}
+
+.close-video {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 10px;
+}
+
+/* Ad Overlay */
+.ad-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ad-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 10px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+}
+
+.ad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ad-header span:first-child {
+    background: #e50914;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.skip-button {
+    background: none;
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 5px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.skip-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.ad-content {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.ad-content h2 {
+    font-size: 32px;
+    margin-bottom: 15px;
+}
+
+.ad-content p {
+    font-size: 18px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.ad-cta {
+    background: #e50914;
+    color: #fff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.ad-cta:hover {
+    background: #f40612;
+}
+
+/* Chat Widget */
+.chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+.chat-header {
+    background: #e50914;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-body {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1a1a1a;
+}
+
+.message {
+    margin-bottom: 15px;
+}
+
+.message.user {
+    text-align: right;
+}
+
+.message.user p {
+    background: #e50914;
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 15px 15px 0 15px;
+}
+
+.message.bot p {
+    background: #333;
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 15px 15px 15px 0;
+}
+
+.chat-input {
+    display: flex;
+    padding: 15px;
+    border-top: 1px solid #333;
+}
+
+.chat-input input {
+    flex: 1;
+    background: #333;
+    border: none;
+    padding: 10px;
+    border-radius: 20px;
+    color: #fff;
+    margin-right: 10px;
+}
+
+.chat-input input:focus {
+    outline: none;
+    background: #444;
+}
+
+.chat-input button {
+    background: #e50914;
+    border: none;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.chat-input button:hover {
+    background: #f40612;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .netflix-header {
+        padding: 15px 20px;
+    }
+    
+    .shows-carousel {
+        padding: 0 20px;
+    }
+    
+    .show-card {
+        min-width: 200px;
+        height: 120px;
+    }
+    
+    .chat-widget {
+        width: 90%;
+        right: 5%;
+    }
+}

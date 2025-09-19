@@ -3,146 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTR Analytics Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>CTR Analytics Dashboard - Netflix Style</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/netflix-style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-gauges.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gaugeJS/dist/gauge.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📊 CTR Analytics Dashboard</h1>
-            <nav>
+    <div class="netflix-container">
+        <!-- Netflix Header -->
+        <header class="netflix-header">
+            <div class="logo">
+                <h1>MICROFLIX</h1>
+            </div>
+            <nav class="netflix-nav">
                 <a href="/">Home</a>
-                <a href="/dashboard" class="active">Dashboard</a>
+                <a href="/dashboard" class="active">Analytics</a>
                 <a href="/test">Test Mode</a>
             </nav>
+            <div class="user-menu">
+                <span>Analytics</span>
+                <i class="fas fa-chart-line"></i>
+            </div>
         </header>
 
-        <div class="dashboard-content">
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>Total Impressions</h3>
-                    <div class="metric-value">{{ metrics.total_impressions|default('0') }}</div>
-                    <span class="metric-label">Ad views</span>
+        <div class="dashboard-main">
+            <h1 class="dashboard-title">Real-Time Analytics Dashboard</h1>
+            
+            <!-- Speedometer Gauges -->
+            <div class="gauges-container">
+                <div class="gauge-card">
+                    <h3>Current CTR</h3>
+                    <canvas id="ctrGauge"></canvas>
+                    <div class="gauge-value" id="ctrValue">0%</div>
+                    <div class="gauge-label">Click-Through Rate</div>
                 </div>
-                <div class="metric-card">
-                    <h3>Total Clicks</h3>
-                    <div class="metric-value">{{ metrics.total_clicks|default('0') }}</div>
-                    <span class="metric-label">User interactions</span>
+                
+                <div class="gauge-card">
+                    <h3>Engagement Score</h3>
+                    <canvas id="engagementGauge"></canvas>
+                    <div class="gauge-value" id="engagementValue">0</div>
+                    <div class="gauge-label">User Engagement</div>
                 </div>
-                <div class="metric-card highlight">
-                    <h3>Average CTR</h3>
-                    <div class="metric-value">{{ metrics.avg_ctr|default('0%') }}</div>
-                    <span class="metric-label">Click-through rate</span>
-                </div>
-                <div class="metric-card">
-                    <h3>Revenue</h3>
-                    <div class="metric-value">{{ metrics.revenue|default('$0') }}</div>
-                    <span class="metric-label">Total earnings</span>
+                
+                <div class="gauge-card">
+                    <h3>Revenue Impact</h3>
+                    <canvas id="revenueGauge"></canvas>
+                    <div class="gauge-value" id="revenueValue">$0</div>
+                    <div class="gauge-label">Hourly Revenue</div>
                 </div>
             </div>
 
-            <div class="charts-section">
+            <!-- Live Metrics -->
+            <div class="live-metrics">
+                <div class="metric-tile">
+                    <i class="fas fa-eye"></i>
+                    <div class="metric-info">
+                        <div class="metric-number" id="impressionsCount">{{ metrics.total_impressions|default('0') }}</div>
+                        <div class="metric-label">Impressions</div>
+                    </div>
+                </div>
+                <div class="metric-tile">
+                    <i class="fas fa-mouse-pointer"></i>
+                    <div class="metric-info">
+                        <div class="metric-number" id="clicksCount">{{ metrics.total_clicks|default('0') }}</div>
+                        <div class="metric-label">Clicks</div>
+                    </div>
+                </div>
+                <div class="metric-tile">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="metric-info">
+                        <div class="metric-number" id="conversionRate">2.4%</div>
+                        <div class="metric-label">Conversion</div>
+                    </div>
+                </div>
+                <div class="metric-tile">
+                    <i class="fas fa-users"></i>
+                    <div class="metric-info">
+                        <div class="metric-number" id="activeUsers">1,247</div>
+                        <div class="metric-label">Active Users</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Chart -->
+            <div class="chart-section">
+                <h2>Live Performance Tracking</h2>
                 <div class="chart-container">
-                    <h3>Hourly Performance</h3>
-                    <canvas id="hourlyChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>CTR by Device Type</h3>
-                    <canvas id="deviceChart"></canvas>
+                    <canvas id="realtimeChart"></canvas>
                 </div>
             </div>
 
-            <div class="top-ads-section">
-                <h3>Top Performing Ads</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Ad Name</th>
-                            <th>CTR</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ad in metrics.top_performing_ads %}
-                        <tr>
-                            <td>{{ ad.name }}</td>
-                            <td>{{ ad.ctr }}</td>
-                            <td><span class="status-badge success">Active</span></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="actions-section">
-                <button onclick="refreshData()" class="btn-primary">Refresh Data</button>
-                <button onclick="exportData()" class="btn-secondary">Export Report</button>
+            <!-- Top Performing Ads -->
+            <div class="performance-section">
+                <h2>Top Performing Campaigns</h2>
+                <div class="performance-grid">
+                    {% for ad in metrics.top_performing_ads %}
+                    <div class="performance-card">
+                        <div class="ad-name">{{ ad.name }}</div>
+                        <div class="ad-metric">
+                            <span class="metric-label">CTR</span>
+                            <span class="metric-value">{{ ad.ctr }}</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="bar-fill" style="width: {{ ad.ctr }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Hourly Performance Chart
-        const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
-        const hourlyData = {{ metrics.hourly_performance|tojson }};
-        
-        new Chart(hourlyCtx, {
-            type: 'line',
-            data: {
-                labels: hourlyData.hours,
-                datasets: [{
-                    label: 'Impressions',
-                    data: hourlyData.impressions,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }, {
-                    label: 'Clicks',
-                    data: hourlyData.clicks,
-                    borderColor: 'rgb(255, 99, 132)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Device CTR Chart
-        const deviceCtx = document.getElementById('deviceChart').getContext('2d');
-        new Chart(deviceCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Mobile', 'Desktop', 'Smart TV', 'Tablet'],
-                datasets: [{
-                    data: [35, 25, 30, 10],
-                    backgroundColor: [
-                        'rgb(255, 99, 132)',
-                        'rgb(54, 162, 235)',
-                        'rgb(255, 205, 86)',
-                        'rgb(75, 192, 192)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-
-        function refreshData() {
-            location.reload();
-        }
-
-        function exportData() {
-            alert('Export functionality would download a CSV report');
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/dashboard-gauges.js') }}"></script>
 </body>
 </html>

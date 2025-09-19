@@ -19,11 +19,41 @@ app = Flask(__name__)
 
 # --- Mock Data ---
 MOVIES = [
-    {"id": "mv1", "title": "The Cosmic Odyssey", "genre": "SciFi", "thumbnail": "https://via.placeholder.com/200x120?text=SciFi"},
-    {"id": "mv2", "title": "Laughing Gas", "genre": "Comedy", "thumbnail": "https://via.placeholder.com/200x120?text=Comedy"},
-    {"id": "mv3", "title": "Heartland Echoes", "genre": "Drama", "thumbnail": "https://via.placeholder.com/200x120?text=Drama"},
-    {"id": "mv4", "title": "Pixel Paladins", "genre": "Action", "thumbnail": "https://via.placeholder.com/200x120?text=Action"},
-    {"id": "mv5", "title": "Whispering Woods", "genre": "Mystery", "thumbnail": "https://via.placeholder.com/200x120?text=Mystery"},
+    {
+        "id": "mv1", 
+        "title": "The Cosmic Odyssey", 
+        "genre": "SciFi", 
+        "thumbnail": "https://via.placeholder.com/250x140/000033/ffffff?text=SciFi+Movie",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    },
+    {
+        "id": "mv2", 
+        "title": "Laughing Gas", 
+        "genre": "Comedy", 
+        "thumbnail": "https://via.placeholder.com/250x140/330000/ffffff?text=Comedy+Show",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+    },
+    {
+        "id": "mv3", 
+        "title": "Heartland Echoes", 
+        "genre": "Drama", 
+        "thumbnail": "https://via.placeholder.com/250x140/003300/ffffff?text=Drama+Series",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+    },
+    {
+        "id": "mv4", 
+        "title": "Pixel Paladins", 
+        "genre": "Action", 
+        "thumbnail": "https://via.placeholder.com/250x140/330033/ffffff?text=Action+Film",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+    },
+    {
+        "id": "mv5", 
+        "title": "Whispering Woods", 
+        "genre": "Mystery", 
+        "thumbnail": "https://via.placeholder.com/250x140/333300/ffffff?text=Mystery+Show",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+    }
 ]
 
 ADS_INVENTORY = [
@@ -484,3 +514,31 @@ if __name__ == '__main__':
     
     # Run the Flask app
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
+    @app.route('/api/chat', methods=['POST'])
+def chat():
+    """Handle chat messages about campaigns"""
+    data = request.json
+    message = data.get('message', '').lower()
+    
+    # Simple keyword-based responses
+    responses = {
+        'ctr': 'Our current average CTR is 3.8%, which is above industry standards. The ML model helps us optimize ad placement for maximum engagement.',
+        'performance': 'Top performing campaigns this week: Quantum Car (7.2% CTR), FuturePhone Pro (5.8% CTR), and Snack Bites (4.9% CTR).',
+        'optimization': 'We use RandomForest ML models to predict CTR based on user demographics, viewing habits, and content context. The system continuously learns from click data.',
+        'revenue': 'Current hourly revenue is $487, with a 15% increase from last week. Premium tier users show 2x higher engagement.',
+        'help': 'I can answer questions about CTR, performance metrics, optimization strategies, and campaign analytics. What would you like to know?'
+    }
+    
+    # Find matching response
+    response = responses.get('help')  # default
+    for keyword, text in responses.items():
+        if keyword in message:
+            response = text
+            break
+    
+    return jsonify({'response': response})
+
+    
