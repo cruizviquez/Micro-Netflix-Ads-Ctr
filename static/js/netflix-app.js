@@ -37,12 +37,66 @@ function playMovie(movieId, genre) {
     });
 }
 
-// Show video player
-function showVideoPlayer() {
+// Show video player with dynamic video
+function showVideoPlayer(videoUrl) {
     document.getElementById('videoPlayerModal').style.display = 'flex';
     const video = document.getElementById('mainVideo');
-    video.play();
+    
+    // Set video source based on selected movie
+    if (videoUrl) {
+        video.src = videoUrl;
+    }
+    
+    video.play().catch(error => {
+        console.log('Video play error:', error);
+        // Fallback to default video
+        video.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+        video.play();
+    });
 }
+
+// Update playMovie function
+function playMovie(movieId, genre) {
+    selectedMovie = movieId;
+    selectedGenre = genre;
+    
+    // Find the movie to get its video URL
+    const movieData = {{ movies|tojson }};
+    const movie = movieData.find(m => m.id === movieId);
+    
+    // Get user profile
+    const formData = new FormData(document.getElementById('userProfileForm'));
+    const userProfile = {};
+    for (let [key, value] of formData.entries()) {
+        userProfile[key] = isNaN(value) ? value : parseInt(value);
+    }
+    
+    // Request optimized ad
+    fetch('/api/optimize_ad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            user_profile: userProfile,
+            content_context: { movie_id: movieId, genre: genre }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentAd = data.ad;
+            showVideoPlayer(movie ? movie.video_url : null);
+            // Show ad after 10 seconds of video
+            setTimeout(() => showAd(data.ad), 10000);
+        }
+    });
+}
+
+
+
+
+
+
+
 
 // Show ad overlay
 function showAd(adData) {

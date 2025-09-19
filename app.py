@@ -1,11 +1,10 @@
-# app.py - Complete File
 from flask import Flask, render_template, request, jsonify, url_for
 import random
 import time
 import os
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ML imports
 from sklearn.model_selection import train_test_split
@@ -266,7 +265,7 @@ except Exception as e:
     print(f"ERROR: Failed to initialize components: {e}")
     ml_pipeline = None
     ad_optimizer = None
-
+   
 # --- Flask Routes ---
 @app.route('/')
 def index():
@@ -298,7 +297,7 @@ def simulate_ad_request():
         time.sleep(0.5)  # Simulate processing
         return jsonify(best_ad)
     else:
-                return jsonify({"error": "No suitable ad found"}), 404
+        return jsonify({"error": "No suitable ad found"}), 404
 
 @app.route('/api/optimize_ad', methods=['POST'])
 def optimize_ad():
@@ -400,6 +399,58 @@ def generate_test_data():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/generate_demo_data', methods=['GET'])
+def generate_demo_data():
+    """Generate demo interaction data"""
+    demo_events = []
+    
+    for i in range(100):
+        event = {
+            'timestamp': (datetime.now() - timedelta(minutes=random.randint(0, 1440))).isoformat(),
+            'user_id': f'demo_user_{random.randint(1, 50)}',
+            'ad_id': random.choice(['ad1', 'ad2', 'ad3', 'ad4', 'ad5']),
+            'event_type': random.choice(['impression', 'impression', 'impression', 'click']),
+            'predicted_ctr': random.uniform(0.02, 0.08)
+        }
+        demo_events.append(event)
+    
+    # Calculate summary stats
+    impressions = len([e for e in demo_events if e['event_type'] == 'impression'])
+    clicks = len([e for e in demo_events if e['event_type'] == 'click'])
+    ctr = clicks / impressions if impressions > 0 else 0
+    
+    return jsonify({
+        'events_generated': len(demo_events),
+        'impressions': impressions,
+        'clicks': clicks,
+        'ctr': f"{ctr:.2%}",
+        'sample_events': demo_events[:5]
+    })
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    """Handle chat messages about campaigns"""
+    data = request.json
+    message = data.get('message', '').lower()
+    
+    # Simple keyword-based responses
+    responses = {
+        'ctr': 'Our current average CTR is 3.8%, which is above industry standards. The ML model helps us optimize ad placement for maximum engagement.',
+        'performance': 'Top performing campaigns this week: Quantum Car (7.2% CTR), FuturePhone Pro (5.8% CTR), and Snack Bites (4.9% CTR).',
+        'optimization': 'We use RandomForest ML models to predict CTR based on user demographics, viewing habits, and content context. The system continuously learns from click data.',
+        'revenue': 'Current hourly revenue is $487, with a 15% increase from last week. Premium tier users show 2x higher engagement.',
+        'help': 'I can answer questions about CTR, performance metrics, optimization strategies, and campaign analytics. What would you like to know?'
+    }
+    
+    # Find matching response
+    response = responses.get('help')  # default
+    for keyword, text in responses.items():
+        if keyword in message:
+            response = text
+            break
+    
+    return jsonify({'response': response})
 
 # --- Helper Functions ---
 def log_impression(user_profile, ad, context):
@@ -505,6 +556,7 @@ def not_found_error(error):
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
+# --- Main Entry Point ---
 if __name__ == '__main__':
     # Create necessary directories
     os.makedirs('data', exist_ok=True)
@@ -514,31 +566,3 @@ if __name__ == '__main__':
     
     # Run the Flask app
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
-    @app.route('/api/chat', methods=['POST'])
-def chat():
-    """Handle chat messages about campaigns"""
-    data = request.json
-    message = data.get('message', '').lower()
-    
-    # Simple keyword-based responses
-    responses = {
-        'ctr': 'Our current average CTR is 3.8%, which is above industry standards. The ML model helps us optimize ad placement for maximum engagement.',
-        'performance': 'Top performing campaigns this week: Quantum Car (7.2% CTR), FuturePhone Pro (5.8% CTR), and Snack Bites (4.9% CTR).',
-        'optimization': 'We use RandomForest ML models to predict CTR based on user demographics, viewing habits, and content context. The system continuously learns from click data.',
-        'revenue': 'Current hourly revenue is $487, with a 15% increase from last week. Premium tier users show 2x higher engagement.',
-        'help': 'I can answer questions about CTR, performance metrics, optimization strategies, and campaign analytics. What would you like to know?'
-    }
-    
-    # Find matching response
-    response = responses.get('help')  # default
-    for keyword, text in responses.items():
-        if keyword in message:
-            response = text
-            break
-    
-    return jsonify({'response': response})
-
-    
